@@ -8,6 +8,7 @@ import torch
 import torch.nn.functional as F
 from sklearn import metrics
 
+import wandb
 
 def dump(save_dir, outputs):
     filenames = outputs["filename"]
@@ -109,7 +110,7 @@ class EvalImage:
 
     def encode_mask(self, masks):
         N, _, _ = masks.shape
-        masks = (masks.reshape(N, -1).sum(axis=1) != 0).astype(np.int)  # (N, )
+        masks = (masks.reshape(N, -1).sum(axis=1) != 0).astype(np.int32)  # (N, )
         return masks
 
     def eval_auc(self):

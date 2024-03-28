@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/home/sakai/projects/Reimpl/HVQ-Trans/HVQ-Trans')
+
 import argparse
 import logging
 import os
@@ -29,6 +32,8 @@ from utils.misc_helper import (
 from utils.optimizer_helper import get_optimizer
 from utils.vis_helper import visualize_compound, visualize_single
 from models.HVQ_TR_switch import HVQ_TR_switch
+import wandb
+from datetime import datetime
 # from models.HVQ_TR_switch_OT import HVQ_TR_switch_OT
 
 parser = argparse.ArgumentParser(description="UniAD Framework")
@@ -36,6 +41,8 @@ parser.add_argument("--config", default="./config.yaml")
 parser.add_argument("-e", "--evaluate", action="store_true")
 parser.add_argument("--local_rank", default=None, help="local rank for dist")
 parser.add_argument('--train_only_four_decoder',default=False,type=bool)
+parser.add_argument('--project_name', type=str, default="HVQ-Trans")
+parser.add_argument('--experiment_name', type=str, default="")
 
 def main():
     global args, config, key_metric, best_metric
@@ -43,6 +50,12 @@ def main():
 
     with open(args.config) as f:
         config = EasyDict(yaml.load(f, Loader=yaml.FullLoader))
+    
+    wandb.init(
+        project=args.project_name,
+        name="All Category" + f"[{args.experiment_name}]" + datetime.now().strftime("_%Y-%m-%d_%H-%M-%S"),
+        config=config
+    )
 
     config.port = config.get("port", None)
     rank, world_size = setup_distributed(port=config.port)
@@ -233,7 +246,12 @@ def train_one_epoch(
                     lr=current_lr,
                 )
             )
-
+            
+            wandb.log({"train_loss": losses.avg, "step": curr_step + 1})
+            wandb.log({"lr": current_lr, "step": curr_step + 1})
+            wandb.log({"feature_loss": outputs['feature_loss'].item(), "step": curr_step + 1})
+            wandb.log({"quant_loss": outputs['latent_loss'].item(), "step": curr_step + 1})
+            
         end = time.time()
 
 
@@ -277,6 +295,7 @@ def validate(val_loader, model):
                         i + 1, len(val_loader), batch_time=batch_time
                     )
                 )
+                wandb.log({"val_loss": losses.avg, "step": i + 1})
 
     # gather final results
     dist.barrier()
@@ -296,6 +315,15 @@ def validate(val_loader, model):
         # evaluate, log & vis
         ret_metrics = performances(fileinfos, preds, masks, config.evaluator.metrics)
         log_metrics(ret_metrics, config.evaluator.metrics)
+        
+        clsnames = set([k.rsplit("_", 2)[0] for k in ret_metrics.keys()])
+        clsnames = list(clsnames - set(["mean"])) + ["mean"]
+        auc_keys = [k for k in ret_metrics.keys() if "auc" in k]
+        evalnames = list(set([k.rsplit("_", 2)[1] for k in auc_keys]))
+        for clsname in clsnames:
+            for evalname in evalnames:
+                wandb.log({f"{clsname}_{evalname}_auc": ret_metrics[f"{clsname}_{evalname}_auc"]})
+        
 
         if args.evaluate and config.evaluator.get("vis_compound", None):
             visualize_compound(

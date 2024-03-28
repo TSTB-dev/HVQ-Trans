@@ -94,7 +94,7 @@ class HVQ_TR_switch(nn.Module):
         self.quantize_list_3 = nn.ModuleList([])
         self.quantize_list_4 = nn.ModuleList([])
         self.quantize_list_5 = nn.ModuleList([])
-        for i in range(15):
+        for i in range(5):
             self.quantize_list_1.append(Quantize(embed_dim*2, 512))
             self.quantize_list_2.append(Quantize(embed_dim*2, 512))
             self.quantize_list_3.append(Quantize(embed_dim*2, 512))
@@ -136,7 +136,7 @@ class HVQ_TR_switch(nn.Module):
         self.input_proj = nn.Linear(channel, embed_dim)
         # self.output_proj = nn.Linear(embed_dim * 2, channel)
         self.output_proj_list = nn.ModuleList([])
-        for i in range(15):
+        for i in range(5):
             self.output_proj_list.append(nn.Linear(embed_dim * 2, channel))
 
         self.upsample = nn.UpsamplingBilinear2d(scale_factor=16)

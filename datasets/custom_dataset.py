@@ -16,8 +16,13 @@ from datasets.transforms import RandomColorJitter
 
 logger = logging.getLogger("global_logger")
 
-cls_list = ['bottle','cable','capsule','carpet','grid','hazelnut','leather',
-            'metal_nut','pill','screw','tile','toothbrush','transistor','wood','zipper']
+# cls_list = ['bottle','cable','capsule','carpet','grid','hazelnut','leather',
+#             'metal_nut','pill','screw','tile','toothbrush','transistor','wood','zipper']
+cls_list = ['screw_bag',
+ 'juice_bottle',
+ 'splicing_connectors',
+ 'breakfast_box',
+ 'pushpins']
 
 def build_custom_dataloader(cfg, training, distributed=True):
 

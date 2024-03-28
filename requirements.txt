@@ -1,0 +1,13 @@
+pandas
+torch
+torchvision
+pyyaml
+opencv-python
+easydict
+tensorboardX
+tabulate
+scikit-learn
+lmdb
+einops
+jupyter
+wandb

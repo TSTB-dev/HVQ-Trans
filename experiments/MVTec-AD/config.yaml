@@ -8,18 +8,18 @@ dataset:
   image_reader:
     type: opencv
     kwargs:
-      image_dir: ../../data/MVTec-AD/mvtec_anomaly_detection/
+      image_dir: /home/sakai/projects/Reimpl/HVQ-Trans/HVQ-Trans/data/MVTec-LOCO/MVTecLOCO
       color_mode: RGB
 
   train:
-    meta_file: ../../data/MVTec-AD/train.json
+    meta_file: /home/sakai/projects/Reimpl/HVQ-Trans/HVQ-Trans/data/MVTec-LOCO/train.json
     rebalance: False
     hflip: False
     vflip: False
     rotate: False
 
   test:
-    meta_file: ../../data/MVTec-AD/test.json
+    meta_file: /home/sakai/projects/Reimpl/HVQ-Trans/HVQ-Trans/data/MVTec-LOCO/test.json
 
   input_size: [224,224] # [h,w]
   pixel_mean: [0.485, 0.456, 0.406]
