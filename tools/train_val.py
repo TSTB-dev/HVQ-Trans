@@ -84,7 +84,9 @@ def main():
         set_random_seed(random_seed, reproduce)
 
     # create model
-    model = HVQ_TR_switch(channel=272, embed_dim=256)
+    # model = HVQ_TR_switch(channel=384, embed_dim=64, n_embed=512) for pdn
+    model = HVQ_TR_switch(channel=112, embed_dim=64, n_embed=512)  # for efficientnet
+    
     # C
     model.cuda()
     local_rank = int(os.environ["LOCAL_RANK"])

@@ -11,4 +11,4 @@ export LOCAL_RANK=0
 
 # 総ワーカー数（GPUが1つのみなので1を設定）
 export WORLD_SIZE=1
-/home/sakai/projects/Reimpl/HVQ-Trans/hvq-trans/bin/python3 -u ./tools/train_val.py --config /home/sakai/projects/Reimpl/HVQ-Trans/HVQ-Trans/experiments/MVTec-AD/config.yaml
+/home/sakai/projects/Reimpl/HVQ-Trans/hvq-trans/bin/python3 -u ./tools/train_val.py --config /home/sakai/projects/Reimpl/HVQ-Trans/HVQ-Trans/experiments/MVTec-LOCO/config.yaml

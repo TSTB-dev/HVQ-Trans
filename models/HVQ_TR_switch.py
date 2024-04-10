@@ -10,6 +10,7 @@ from torch.nn import functional as F
 import distributed as dist_fn
 from torchvision import models
 from models.backbones import efficientnet_b4
+from models.backbones.pdn import get_pdn_medium, get_pdn_small
 from models.transformer import TransformerDecoder_hierachy, Org_TransformerDecoderLayer, build_position_embedding
 from models.transformer import TransformerEncoder, TransformerEncoderLayer
 from einops import rearrange
@@ -82,7 +83,10 @@ class HVQ_TR_switch(nn.Module):
         super().__init__()
 
         # Encoder
-        self.enc = efficientnet_b4(pretrained=True, outblocks=[1,5,9,21],outstrides=[2,4,8,16])
+        # TODO: 
+        # self.enc = efficientnet_b4(pretrained=True, outblocks=[1,5,9,21],outstrides=[2,4,8,16])
+        self.enc = efficientnet_b4(pretrained=True, outblocks=[1, 5, 9],outstrides=[2, 4, 8])
+        # self.enc = get_pdn_small()
         for k, p in self.enc.named_parameters():
             p.requires_grad = False
 
@@ -95,11 +99,11 @@ class HVQ_TR_switch(nn.Module):
         self.quantize_list_4 = nn.ModuleList([])
         self.quantize_list_5 = nn.ModuleList([])
         for i in range(5):
-            self.quantize_list_1.append(Quantize(embed_dim*2, 512))
-            self.quantize_list_2.append(Quantize(embed_dim*2, 512))
-            self.quantize_list_3.append(Quantize(embed_dim*2, 512))
-            self.quantize_list_4.append(Quantize(embed_dim*2, 512))
-            self.quantize_list_5.append(Quantize(embed_dim, 512))
+            self.quantize_list_1.append(Quantize(embed_dim*2, n_embed))
+            self.quantize_list_2.append(Quantize(embed_dim*2, n_embed))
+            self.quantize_list_3.append(Quantize(embed_dim*2, n_embed))
+            self.quantize_list_4.append(Quantize(embed_dim*2, n_embed))
+            self.quantize_list_5.append(Quantize(embed_dim, n_embed))
 
         # Encoder
         encoder_layer = TransformerEncoderLayer(
@@ -111,7 +115,8 @@ class HVQ_TR_switch(nn.Module):
         )
 
         # Decoder
-        self.feature_size = (14, 14)
+        # TODO: 
+        self.feature_size = (28, 28)
         self.pos_embed = build_position_embedding(
             'learned', self.feature_size, embed_dim
         )
@@ -139,13 +144,15 @@ class HVQ_TR_switch(nn.Module):
         for i in range(5):
             self.output_proj_list.append(nn.Linear(embed_dim * 2, channel))
 
-        self.upsample = nn.UpsamplingBilinear2d(scale_factor=16)
+        self.upsample = nn.UpsamplingBilinear2d(size=(224, 224))
         self.feature_loss = nn.MSELoss()
         self.rec_loss = nn.MSELoss()
         self.latent_loss_weight = 0.25
         self.channel = channel
 
-        self.scale_factors = [0.125, 0.25, 0.5, 1.0]
+        # TODO:
+        self.scale_factors = [0.25, 0.5, 1.0] # [0.125, 0.25, 0.5, 1.0]
+        # self.scale_factors = [0.125, 0.25, 0.5, 1.0]
         self.upsample_list = [
             nn.UpsamplingBilinear2d(scale_factor=scale_factors)
             for scale_factors in self.scale_factors
@@ -154,9 +161,10 @@ class HVQ_TR_switch(nn.Module):
     def forward(self, inputs):
         input = inputs['image']
         label = inputs['clslabel']
+        anom_label = inputs["label"]
 
         org_feature = self.extract_feature(inputs)
-
+        # org_feature = self.extract_feature(input)
         feature_tokens = self.quantize_conv_t(org_feature)
         feature_tokens = rearrange(
             feature_tokens, "b c h w -> (h w) b c"
@@ -174,7 +182,7 @@ class HVQ_TR_switch(nn.Module):
         output_encoder = rearrange(output_encoder, 'n l b c -> n b l c')
 
         # VQ
-        quant_list, diff, _ = self.encode(output_encoder, label)    # (4, Bs, 196, 512)
+        quant_list, diff, id_list = self.encode(output_encoder, label)    # (4, Bs, 196, 512)
         quant_list = rearrange(quant_list, 'n b l c -> n l b c')    # (4, 196, Bs, 512)
         decode_pos_embed = torch.cat([pos_embed, pos_embed],dim=2)  # (196, Bs, 512)
 
@@ -212,7 +220,9 @@ class HVQ_TR_switch(nn.Module):
             'pred_imgs': input,
             'loss': loss,
             'feature_loss': feature_loss,
-            'latent_loss': latent_loss
+            'latent_loss': latent_loss,
+            'id_list': id_list,
+            'label': anom_label,
         }
         inputs.update(output)
 
@@ -220,12 +230,14 @@ class HVQ_TR_switch(nn.Module):
 
     def extract_feature(self, input):
         enc = self.enc(input)
-        # enc_t = enc['features'][-1]
+        # import pdb; pdb.set_trace()
+        # enc_t = torch.nn.AvgPool2d(2, stride=2)(enc)
+        # TODO: 
+        enc_t = enc['features'][-1]
         feature_list = []
         for i in range(len(enc['features'])):
             feature_list.append(self.upsample_list[i](enc['features'][i]))
         enc_t = torch.cat(feature_list, dim=1)
-
         return enc_t
 
     def encode(self, input_list, label):

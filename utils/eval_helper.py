@@ -19,6 +19,7 @@ def dump(save_dir, outputs):
     heights = outputs["height"].cpu().numpy()
     widths = outputs["width"].cpu().numpy()
     clsnames = outputs["clsname"]
+    labels = outputs["label"].cpu().numpy()
     for i in range(batch_size):
         file_dir, filename = os.path.split(filenames[i])
         _, subname = os.path.split(file_dir)
@@ -34,6 +35,7 @@ def dump(save_dir, outputs):
             height=heights[i],
             width=widths[i],
             clsname=clsnames[i],
+            label=labels[i],
         )
 
 def merge_together(save_dir):
@@ -46,6 +48,7 @@ def merge_together(save_dir):
         npz = np.load(npz_file)
         fileinfos.append(
             {
+                "label": npz["label"],
                 "filename": str(npz["filename"]),
                 "height": npz["height"],
                 "width": npz["width"],

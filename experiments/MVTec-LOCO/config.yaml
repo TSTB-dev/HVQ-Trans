@@ -21,10 +21,10 @@ dataset:
   test:
     meta_file: /home/sakai/projects/Reimpl/HVQ-Trans/HVQ-Trans/data/MVTec-LOCO/test.json
 
-  input_size: [224,224] # [h,w]
+  input_size: [224, 224] # [h,w]
   pixel_mean: [0.485, 0.456, 0.406]
   pixel_std: [0.229, 0.224, 0.225]
-  batch_size: 16
+  batch_size: 8
   workers: 4 # number of workers of dataloader for each process
 
 criterion:
@@ -57,7 +57,7 @@ saver:
   load_path: checkpoints
   save_dir: checkpoints/HVQ_TR_switch
   log_dir: log/
-  # resume_model: checkpoints/HVQ_TR_switch/best_/ckpt_best.pth.tar
+  resume_model: # /home/sakai/projects/Reimpl/HVQ-Trans/HVQ-Trans/experiments/MVTec-LOCO/checkpoints/HVQ_TR_switch/ckpt_best.pth.tar
 
 evaluator:
   save_dir: result_eval_temp
