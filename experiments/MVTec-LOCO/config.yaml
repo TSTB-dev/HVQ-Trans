@@ -57,7 +57,7 @@ saver:
   load_path: checkpoints
   save_dir: checkpoints/HVQ_TR_switch
   log_dir: log/
-  resume_model: # /home/sakai/projects/Reimpl/HVQ-Trans/HVQ-Trans/experiments/MVTec-LOCO/checkpoints/HVQ_TR_switch/ckpt_best.pth.tar
+  resume_model: /home/sakai/projects/Reimpl/HVQ-Trans/HVQ-Trans/experiments/MVTec-LOCO/checkpoints/HVQ_TR_switch/ckpt_best.pth.tar
 
 evaluator:
   save_dir: result_eval_temp

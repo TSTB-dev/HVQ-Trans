@@ -85,8 +85,8 @@ class HVQ_TR_switch(nn.Module):
         # Encoder
         # TODO: 
         # self.enc = efficientnet_b4(pretrained=True, outblocks=[1,5,9,21],outstrides=[2,4,8,16])
-        self.enc = efficientnet_b4(pretrained=True, outblocks=[1, 5, 9],outstrides=[2, 4, 8])
-        # self.enc = get_pdn_small()
+        # self.enc = efficientnet_b4(pretrained=True, outblocks=[1, 5, 9],outstrides=[2, 4, 8])
+        self.enc = get_pdn_small()
         for k, p in self.enc.named_parameters():
             p.requires_grad = False
 
@@ -116,7 +116,7 @@ class HVQ_TR_switch(nn.Module):
 
         # Decoder
         # TODO: 
-        self.feature_size = (28, 28)
+        self.feature_size = (24, 24)
         self.pos_embed = build_position_embedding(
             'learned', self.feature_size, embed_dim
         )
@@ -231,13 +231,13 @@ class HVQ_TR_switch(nn.Module):
     def extract_feature(self, input):
         enc = self.enc(input)
         # import pdb; pdb.set_trace()
-        # enc_t = torch.nn.AvgPool2d(2, stride=2)(enc)
+        enc_t = torch.nn.AvgPool2d(2, stride=2)(enc)
         # TODO: 
-        enc_t = enc['features'][-1]
-        feature_list = []
-        for i in range(len(enc['features'])):
-            feature_list.append(self.upsample_list[i](enc['features'][i]))
-        enc_t = torch.cat(feature_list, dim=1)
+        # enc_t = enc['features'][-1]
+        # feature_list = []
+        # for i in range(len(enc['features'])):
+        #     feature_list.append(self.upsample_list[i](enc['features'][i]))
+        # enc_t = torch.cat(feature_list, dim=1)
         return enc_t
 
     def encode(self, input_list, label):
